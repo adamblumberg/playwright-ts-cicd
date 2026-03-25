@@ -1,19 +1,25 @@
-name: Playwright Tests
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master]
   pull_request:
-    branches: [main, develop]
-  # Allow manual runs from the Actions tab
+    branches: [master]
   workflow_dispatch:
 
+# Cancel in-progress runs for the same branch when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # ────────────────────────────────────────────────────────────────
-  # Job 1: Lint & type-check (fast feedback, no browser needed)
-  # ────────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────────
+  # REQUIRED CHECK 1: Lint
+  # Runs ESLint + TypeScript type-check across src/ and tests/unit/.
+  # Branch protection requires this job to pass before merge.
+  # ──────────────────────────────────────────────────────────────────
   lint:
-    name: Lint & Type Check
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,18 +31,22 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
 
       - name: Type check
         run: npm run typecheck
 
-  # ────────────────────────────────────────────────────────────────
-  # Job 2: API tests (no browser, fast)
-  # ────────────────────────────────────────────────────────────────
-  api-tests:
-    name: API Tests
+  # ──────────────────────────────────────────────────────────────────
+  # REQUIRED CHECK 2: Unit Tests
+  # Vitest unit tests for pure utility/helper functions.
+  # Branch protection requires this job to pass before merge.
+  # ──────────────────────────────────────────────────────────────────
+  unit-test:
+    name: Unit Tests
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -47,9 +57,39 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      - name: Install Playwright (no browsers needed for API)
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-results/
+          retention-days: 14
+
+  # ──────────────────────────────────────────────────────────────────
+  # API Tests — runs after required checks pass
+  # ──────────────────────────────────────────────────────────────────
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: [lint, unit-test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Run API tests
@@ -65,13 +105,13 @@ jobs:
             test-results/
           retention-days: 14
 
-  # ────────────────────────────────────────────────────────────────
-  # Job 3: UI tests sharded across 3 runners for speed
-  # ────────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────────
+  # UI Tests — sharded across 3 parallel runners
+  # ──────────────────────────────────────────────────────────────────
   ui-tests:
     name: UI Tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [lint, unit-test]
     strategy:
       fail-fast: false
       matrix:
@@ -87,7 +127,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
@@ -95,7 +135,7 @@ jobs:
       - name: Run UI tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
         run: npx playwright test tests/ui --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
-      - name: Upload blob report for merge
+      - name: Upload blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -103,11 +143,11 @@ jobs:
           path: blob-report/
           retention-days: 1
 
-  # ────────────────────────────────────────────────────────────────
-  # Job 4: Merge sharded reports into one HTML report
-  # ────────────────────────────────────────────────────────────────
-  merge-reports:
-    name: Merge Reports & Publish
+  # ──────────────────────────────────────────────────────────────────
+  # Merge sharded reports → HTML report → GitHub Pages
+  # ──────────────────────────────────────────────────────────────────
+  publish-report:
+    name: Publish Report
     runs-on: ubuntu-latest
     needs: [ui-tests, api-tests]
     if: always()
@@ -115,6 +155,9 @@ jobs:
       contents: write
       pages: write
       id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -125,9 +168,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
-      # Download all shard blob reports
       - name: Download blob reports
         uses: actions/download-artifact@v4
         with:
@@ -135,25 +177,16 @@ jobs:
           pattern: blob-report-*
           merge-multiple: true
 
-      # Download API report artifacts
-      - name: Download API report
-        uses: actions/download-artifact@v4
-        with:
-          name: api-test-results
-          path: api-playwright-report
-
-      # Merge shard reports into a single HTML report
       - name: Merge Playwright reports
         run: npx playwright merge-reports --reporter html ./all-blob-reports
 
-      - name: Upload merged HTML report
+      - name: Upload merged HTML report artifact
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
 
-      # Deploy merged report to GitHub Pages
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -164,5 +197,4 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: Print report URL
-        run: |
-          echo "Test report published to: ${{ steps.deployment.outputs.page_url }}"
+        run: echo "Report → ${{ steps.deployment.outputs.page_url }}"
