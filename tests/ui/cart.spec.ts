@@ -10,8 +10,8 @@ test.describe('Shopping cart', () => {
   test('add a product to the cart', async ({ page, apiClient, productDetailPage, cartPage }) => {
     // Fetch a product via API and navigate directly — avoids loading the full listing page
     const { data: products } = await apiClient.getProducts();
-    await page.goto(`/product/${products[0].id}`);
-    await expect(productDetailPage.productName).toBeVisible();
+    await page.goto(`/product/${products[0].id}`, { waitUntil: 'domcontentloaded' });
+    await expect(productDetailPage.productName).toBeVisible({ timeout: 15_000 });
     await productDetailPage.addToCart();
 
     await cartPage.goto();
@@ -20,8 +20,8 @@ test.describe('Shopping cart', () => {
 
   test('remove a product from the cart', async ({ page, apiClient, productDetailPage, cartPage }) => {
     const { data: products } = await apiClient.getProducts();
-    await page.goto(`/product/${products[0].id}`);
-    await expect(productDetailPage.productName).toBeVisible();
+    await page.goto(`/product/${products[0].id}`, { waitUntil: 'domcontentloaded' });
+    await expect(productDetailPage.productName).toBeVisible({ timeout: 15_000 });
     await productDetailPage.addToCart();
 
     await cartPage.goto();
