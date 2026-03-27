@@ -50,18 +50,26 @@ test.describe('Shopping cart', () => {
     expect(after).toBe(before - 1);
   });
 
-  test('empty cart shows empty state message', async ({ cartPage, page }) => {
+  test('empty cart shows empty state message', async ({
+    productsPage,
+    productDetailPage,
+    cartPage,
+    page,
+  }) => {
+    // Add an item first so a cart session is created (live site requires this)
+    const names = await productsPage.getProductNames();
+    await productsPage.openProductByName(names[0]);
+    await productDetailPage.addToCart();
+
     await cartPage.goto();
     await cartPage.waitForLoad();
     const count = await cartPage.getItemCount();
-    if (count === 0) {
-      await expect(cartPage.emptyCartMessage).toBeVisible();
-    } else {
-      // Remove all items
-      for (let i = count - 1; i >= 0; i--) {
-        await cartPage.removeItemAt(0);
-      }
-      await expect(cartPage.emptyCartMessage).toBeVisible();
+
+    // Remove all items to reach the empty state
+    for (let i = 0; i < count; i++) {
+      await cartPage.removeItemAt(0);
     }
+
+    await expect(cartPage.emptyCartMessage).toBeVisible({ timeout: 10_000 });
   });
 });

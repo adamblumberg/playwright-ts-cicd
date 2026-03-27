@@ -21,10 +21,11 @@ test.describe('Authentication', () => {
 
   test('should show validation error when fields are empty', async ({
     loginPage,
+    page,
   }) => {
     await loginPage.loginButton.click();
-    // HTML5 validation or inline errors
-    await expect(loginPage.emailInput).toBeFocused();
+    // Angular shows an inline validation error div rather than native browser focus
+    await expect(page.getByTestId('email-error')).toBeVisible();
   });
 
   test('login page has correct title', async ({ page }) => {

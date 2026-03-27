@@ -63,7 +63,7 @@ test.describe('Products API', () => {
     expect(product).toHaveProperty('id');
     expect(product).toHaveProperty('name');
     expect(product).toHaveProperty('price');
-    expect(product).toHaveProperty('category_id');
+    expect(product).toHaveProperty('category');
     expect(typeof product.price).toBe('number');
   });
 });

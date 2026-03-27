@@ -5,13 +5,19 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface Category {
+  id: string;
+  parent_id: string | null;
+  name: string;
+  slug: string;
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
-  category_id: string;
-  brand_id: string;
+  category: Pick<Category, 'id' | 'name' | 'slug'>;
   product_image: { id: string; by_name: string; name: string };
   is_location_offer: boolean;
   is_rental: boolean;
@@ -22,13 +28,6 @@ export interface ProductsResponse {
   data: Product[];
   total: number;
   per_page: number;
-}
-
-export interface Category {
-  id: string;
-  parent_id: string | null;
-  name: string;
-  slug: string;
 }
 
 /**

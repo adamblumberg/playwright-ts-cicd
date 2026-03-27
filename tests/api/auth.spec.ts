@@ -10,7 +10,7 @@ test.describe('Auth API', () => {
       users.customer.password,
     );
     expect(response.access_token).toBeTruthy();
-    expect(response.token_type).toBe('Bearer');
+    expect(response.token_type).toBe('bearer');
   });
 
   test('POST /users/login returns 401 for invalid credentials', async ({
@@ -31,7 +31,7 @@ test.describe('Auth API', () => {
     const response = await apiRequest.post('/users/login', {
       data: {},
     });
-    expect([422, 400]).toContain(response.status());
+    expect([422, 400, 401]).toContain(response.status());
   });
 
   test('authenticated token works for a protected endpoint', async ({

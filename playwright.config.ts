@@ -23,6 +23,7 @@ export default defineConfig({
 
   use: {
     baseURL: 'https://practicesoftwaretesting.com',
+    testIdAttribute: 'data-test',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
@@ -44,7 +45,8 @@ export default defineConfig({
     {
       name: 'mobile-chrome',
       use: { ...devices['Pixel 5'] },
-      testMatch: 'tests/ui/**/*.spec.ts',
+      // Products search/sort/filter controls are desktop-only UI; restrict to suites that work on mobile
+      testMatch: ['tests/ui/login.spec.ts', 'tests/ui/cart.spec.ts'],
     },
     // API tests run without a browser
     {

@@ -16,9 +16,9 @@ export class ProductDetailPage extends BasePage {
     this.productPrice       = page.getByTestId('unit-price');
     this.addToCartButton    = page.getByTestId('add-to-cart');
     this.quantityInput      = page.getByTestId('quantity');
-    this.productDescription = page.locator('[data-testid="product-description"]');
+    this.productDescription = page.locator('[data-test="product-description"]');
     this.categoryBreadcrumb = page.locator('.breadcrumb-item').last();
-    this.toastMessage       = page.locator('.toast-body');
+    this.toastMessage       = page.locator('.toast-message');
   }
 
   async addToCart(quantity = 1): Promise<void> {
