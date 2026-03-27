@@ -20,31 +20,40 @@ export class ProductsPage extends BasePage {
   }
 
   async goto(): Promise<void> {
+    // Pre-register the response listener before navigation so we never miss it.
+    // Waiting for the API response is more reliable than waiting for a DOM element
+    // because it fires as soon as data arrives, before Angular finishes rendering.
+    const productsResponse = this.page.waitForResponse(
+      (r) => r.url().includes('/products') && r.status() === 200,
+      { timeout: 45_000 },
+    );
     await super.goto('/');
-    // Wait for at least one product card — confirms the page has loaded data
-    await this.productCards.first().waitFor({ state: 'visible' });
+    await productsResponse;
   }
 
   async search(query: string): Promise<void> {
+    const response = this.page.waitForResponse(
+      (r) => r.url().includes('/products') && r.status() === 200,
+    );
     await this.searchInput.fill(query);
     await this.searchButton.click();
-    await this.page.waitForResponse(
-      (resp) => resp.url().includes('/products') && resp.status() === 200
-    );
+    await response;
   }
 
   async selectCategory(category: string): Promise<void> {
-    await this.categoryLinks.filter({ hasText: category }).first().click();
-    await this.page.waitForResponse(
-      (resp) => resp.url().includes('/products') && resp.status() === 200
+    const response = this.page.waitForResponse(
+      (r) => r.url().includes('/products') && r.status() === 200,
     );
+    await this.categoryLinks.filter({ hasText: category }).first().click();
+    await response;
   }
 
   async sortBy(option: string): Promise<void> {
-    await this.sortDropdown.selectOption(option);
-    await this.page.waitForResponse(
-      (resp) => resp.url().includes('/products') && resp.status() === 200
+    const response = this.page.waitForResponse(
+      (r) => r.url().includes('/products') && r.status() === 200,
     );
+    await this.sortDropdown.selectOption(option);
+    await response;
   }
 
   async openProductByName(name: string): Promise<void> {

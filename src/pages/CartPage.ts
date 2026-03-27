@@ -23,8 +23,6 @@ export class CartPage extends BasePage {
   }
 
   async getItemCount(): Promise<number> {
-    // Short wait in case cart is still loading; if empty, returns 0 immediately after timeout
-    await this.cartItems.first().waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {});
     return this.cartItems.count();
   }
 

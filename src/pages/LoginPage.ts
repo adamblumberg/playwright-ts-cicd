@@ -7,6 +7,7 @@ export class LoginPage extends BasePage {
   readonly loginButton: Locator;
   readonly errorMessage: Locator;
   readonly welcomeMessage: Locator;
+  readonly emailError: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -15,6 +16,7 @@ export class LoginPage extends BasePage {
     this.loginButton    = page.getByTestId('login-submit');
     this.errorMessage   = page.getByTestId('login-error');
     this.welcomeMessage = page.getByTestId('page-title');
+    this.emailError     = page.getByTestId('email-error');
   }
 
   async goto(): Promise<void> {
