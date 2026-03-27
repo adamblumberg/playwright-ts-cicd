@@ -2,25 +2,26 @@ import { test, expect } from '../../src/fixtures';
 import { users } from '../../src/data/users';
 
 test.describe('Shopping cart', () => {
-  // Sign in before each test so we have an authenticated session
-  test.beforeEach(async ({ loginPage, productsPage }) => {
+  test.beforeEach(async ({ loginPage }) => {
     await loginPage.goto();
     await loginPage.loginAndWait(users.customer.email, users.customer.password);
-    await productsPage.goto();
   });
 
-  test('add a product to the cart', async ({ productsPage, productDetailPage, cartPage }) => {
-    const names = await productsPage.getProductNames();
-    await productsPage.openProductByName(names[0]);
+  test('add a product to the cart', async ({ page, apiClient, productDetailPage, cartPage }) => {
+    // Fetch a product via API and navigate directly — avoids loading the full listing page
+    const { data: products } = await apiClient.getProducts();
+    await page.goto(`/product/${products[0].id}`);
+    await expect(productDetailPage.productName).toBeVisible();
     await productDetailPage.addToCart();
 
     await cartPage.goto();
     await expect(cartPage.cartItems.first()).toBeVisible();
   });
 
-  test('remove a product from the cart', async ({ productsPage, productDetailPage, cartPage }) => {
-    const names = await productsPage.getProductNames();
-    await productsPage.openProductByName(names[0]);
+  test('remove a product from the cart', async ({ page, apiClient, productDetailPage, cartPage }) => {
+    const { data: products } = await apiClient.getProducts();
+    await page.goto(`/product/${products[0].id}`);
+    await expect(productDetailPage.productName).toBeVisible();
     await productDetailPage.addToCart();
 
     await cartPage.goto();
