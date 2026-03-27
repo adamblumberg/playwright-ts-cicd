@@ -20,15 +20,10 @@ export class ProductsPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    // Pre-register the response listener before navigation so we never miss it.
-    // Waiting for the API response is more reliable than waiting for a DOM element
-    // because it fires as soon as data arrives, before Angular finishes rendering.
-    const productsResponse = this.page.waitForResponse(
-      (r) => r.url().includes('/products') && r.status() === 200,
-      { timeout: 45_000 },
-    );
     await super.goto('/');
-    await productsResponse;
+    // Wait for at least one product card to be visible — this confirms the page
+    // has loaded and Angular has rendered data, regardless of network caching.
+    await this.productCards.first().waitFor({ state: 'visible', timeout: 45_000 });
   }
 
   async search(query: string): Promise<void> {
