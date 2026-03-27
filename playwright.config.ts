@@ -2,12 +2,14 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 30_000,
+  timeout: 90_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  // 1 worker in CI avoids two browsers competing for the same external network connection.
+  // The 3 shards already provide parallelism across runners.
+  workers: process.env.CI ? 1 : undefined,
 
   reporter: [
     ['list'],

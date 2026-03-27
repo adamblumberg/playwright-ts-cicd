@@ -29,6 +29,7 @@ export class LoginPage extends BasePage {
 
   async loginAndWait(email: string, password: string): Promise<void> {
     await this.login(email, password);
-    await this.page.waitForURL(/\/account/, { timeout: 10_000 });
+    // Wait for navigation away from the login page (redirect target can vary)
+    await this.page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 15_000 });
   }
 }

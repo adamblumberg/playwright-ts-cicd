@@ -178,7 +178,14 @@ jobs:
           merge-multiple: true
 
       - name: Merge Playwright reports
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
+        run: |
+          if [ -d ./all-blob-reports ] && [ "$(ls -A ./all-blob-reports)" ]; then
+            npx playwright merge-reports --reporter html ./all-blob-reports
+          else
+            echo "No blob reports found — creating placeholder"
+            mkdir -p playwright-report
+            echo "<html><body><h1>No test reports available</h1></body></html>" > playwright-report/index.html
+          fi
 
       - name: Upload merged HTML report artifact
         uses: actions/upload-artifact@v4

@@ -21,6 +21,8 @@ export class ProductsPage extends BasePage {
 
   async goto(): Promise<void> {
     await super.goto('/');
+    // Wait for at least one product card — confirms the page has loaded data
+    await this.productCards.first().waitFor({ state: 'visible' });
   }
 
   async search(query: string): Promise<void> {
@@ -29,7 +31,6 @@ export class ProductsPage extends BasePage {
     await this.page.waitForResponse(
       (resp) => resp.url().includes('/products') && resp.status() === 200
     );
-    await this.page.waitForLoadState('networkidle');
   }
 
   async selectCategory(category: string): Promise<void> {
@@ -37,7 +38,6 @@ export class ProductsPage extends BasePage {
     await this.page.waitForResponse(
       (resp) => resp.url().includes('/products') && resp.status() === 200
     );
-    await this.page.waitForLoadState('networkidle');
   }
 
   async sortBy(option: string): Promise<void> {
@@ -45,7 +45,6 @@ export class ProductsPage extends BasePage {
     await this.page.waitForResponse(
       (resp) => resp.url().includes('/products') && resp.status() === 200
     );
-    await this.page.waitForLoadState('networkidle');
   }
 
   async openProductByName(name: string): Promise<void> {

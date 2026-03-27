@@ -25,9 +25,12 @@ export class ProductDetailPage extends BasePage {
     if (quantity > 1) {
       await this.quantityInput.fill(String(quantity));
     }
+    // Register response listener before clicking so we don't miss it
+    const confirmed = this.page.waitForResponse(
+      (r) => r.url().includes('/carts') && r.status() === 200
+    );
     await this.addToCartButton.click();
-    // wait for the toast confirmation
-    await this.toastMessage.waitFor({ state: 'visible', timeout: 8_000 });
+    await confirmed;
   }
 
   async getPrice(): Promise<string> {

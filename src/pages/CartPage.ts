@@ -18,18 +18,12 @@ export class CartPage extends BasePage {
   }
 
   async goto(): Promise<void> {
-    // Start listening before navigation so we don't miss the response
-    const cartApiResponse = this.page.waitForResponse(
-      (resp) => resp.url().includes('/carts') && resp.status() === 200,
-      { timeout: 5_000 }
-    ).catch(() => { /* no cart session yet – that's OK */ });
     await super.goto('/checkout');
-    await cartApiResponse;
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('load');
   }
 
   async getItemCount(): Promise<number> {
-    // Wait for the first item to appear (in case cart is still loading)
+    // Short wait in case cart is still loading; if empty, returns 0 immediately after timeout
     await this.cartItems.first().waitFor({ state: 'visible', timeout: 8_000 }).catch(() => {});
     return this.cartItems.count();
   }
@@ -39,13 +33,10 @@ export class CartPage extends BasePage {
   }
 
   async removeItemAt(index: number): Promise<void> {
+    const countBefore = await this.cartItems.count();
     await this.deleteButtons.nth(index).click();
-    // Wait for the delete request + subsequent cart refetch from the API
-    await this.page.waitForResponse(
-      (resp) => resp.url().includes('/carts/') && resp.status() === 200,
-      { timeout: 15_000 }
-    );
-    await this.page.waitForLoadState('networkidle');
+    // Wait for the DOM to reflect the removal
+    await this.cartItems.nth(countBefore - 1).waitFor({ state: 'detached' });
   }
 
   async proceedToCheckout(): Promise<void> {

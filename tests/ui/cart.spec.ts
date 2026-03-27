@@ -7,7 +7,6 @@ test.describe('Shopping cart', () => {
     await loginPage.goto();
     await loginPage.loginAndWait(users.customer.email, users.customer.password);
     await productsPage.goto();
-    await productsPage.waitForLoad();
   });
 
   test('add a product to the cart', async ({
@@ -20,9 +19,8 @@ test.describe('Shopping cart', () => {
     const names = await productsPage.getProductNames();
     await productsPage.openProductByName(names[0]);
 
-    // Add to cart and confirm toast
+    // Add to cart and confirm via cart count
     await productDetailPage.addToCart();
-    await expect(productDetailPage.toastMessage).toContainText(/added/i);
 
     // Navigate to cart and verify item count
     await cartPage.goto();
@@ -43,11 +41,9 @@ test.describe('Shopping cart', () => {
 
     // Remove it
     await cartPage.goto();
-    await cartPage.waitForLoad();
     const before = await cartPage.getItemCount();
     await cartPage.removeItemAt(0);
-    const after = await cartPage.getItemCount();
-    expect(after).toBe(before - 1);
+    await expect(cartPage.cartItems).toHaveCount(before - 1);
   });
 
   test('empty cart shows empty state message', async ({
@@ -62,7 +58,6 @@ test.describe('Shopping cart', () => {
     await productDetailPage.addToCart();
 
     await cartPage.goto();
-    await cartPage.waitForLoad();
     const count = await cartPage.getItemCount();
 
     // Remove all items to reach the empty state

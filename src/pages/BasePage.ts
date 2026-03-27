@@ -12,9 +12,9 @@ export abstract class BasePage {
     await this.page.goto(path);
   }
 
-  /** Wait for the page to reach a network-idle state */
+  /** Wait for the page load event to fire */
   async waitForLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('load');
   }
 
   /** Return the current <title> text */
