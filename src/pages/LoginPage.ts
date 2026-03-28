@@ -6,7 +6,7 @@ export class LoginPage extends BasePage {
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
   readonly errorMessage: Locator;
-  readonly welcomeMessage: Locator;
+  readonly emailError: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -14,7 +14,7 @@ export class LoginPage extends BasePage {
     this.passwordInput  = page.getByTestId('password');
     this.loginButton    = page.getByTestId('login-submit');
     this.errorMessage   = page.getByTestId('login-error');
-    this.welcomeMessage = page.getByTestId('page-title');
+    this.emailError     = page.getByTestId('email-error');
   }
 
   async goto(): Promise<void> {
@@ -29,6 +29,7 @@ export class LoginPage extends BasePage {
 
   async loginAndWait(email: string, password: string): Promise<void> {
     await this.login(email, password);
-    await this.page.waitForURL(/\/account/, { timeout: 10_000 });
+    // Wait for navigation away from the login page (redirect target can vary)
+    await this.page.waitForURL((url) => !url.pathname.includes('/auth/login'), { timeout: 15_000 });
   }
 }

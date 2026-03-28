@@ -178,7 +178,14 @@ jobs:
           merge-multiple: true
 
       - name: Merge Playwright reports
-        run: npx playwright merge-reports --reporter html ./all-blob-reports
+        run: |
+          if [ -d ./all-blob-reports ] && [ "$(ls -A ./all-blob-reports)" ]; then
+            npx playwright merge-reports --reporter html ./all-blob-reports
+          else
+            echo "No blob reports found — creating placeholder"
+            mkdir -p playwright-report
+            echo "<html><body><h1>No test reports available</h1></body></html>" > playwright-report/index.html
+          fi
 
       - name: Upload merged HTML report artifact
         uses: actions/upload-artifact@v4
@@ -188,13 +195,16 @@ jobs:
           retention-days: 30
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report/
 
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master'
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Print report URL
+        if: github.ref == 'refs/heads/master'
         run: echo "Report → ${{ steps.deployment.outputs.page_url }}"

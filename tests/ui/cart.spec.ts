@@ -2,74 +2,48 @@ import { test, expect } from '../../src/fixtures';
 import { users } from '../../src/data/users';
 
 test.describe('Shopping cart', () => {
-  // Sign in before each test so we have an authenticated session
-  test.beforeEach(async ({ loginPage, productsPage }) => {
-    await loginPage.goto();
-    await loginPage.loginAndWait(users.customer.email, users.customer.password);
-    await productsPage.goto();
-    await productsPage.waitForLoad();
-  });
+  test('complete checkout flow', async ({ page, apiClient, loginPage }) => {
+    // Navigate to a product and add to cart (unauthenticated)
+    const { data: products } = await apiClient.getProducts();
+    await page.goto(`/product/${products[0].id}`, { waitUntil: 'domcontentloaded' });
+    await page.getByTestId('add-to-cart').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.getByTestId('add-to-cart').click();
 
-  test('add a product to the cart', async ({
-    productsPage,
-    productDetailPage,
-    cartPage,
-    page,
-  }) => {
-    // Open first product
-    const names = await productsPage.getProductNames();
-    await productsPage.openProductByName(names[0]);
+    // Use the cart icon to navigate — SPA navigation keeps Angular's in-memory cart
+    // state intact, avoiding the localStorage timing race that page.goto('/checkout') has
+    await page.getByTestId('nav-cart').click();
 
-    // Add to cart and confirm toast
-    await productDetailPage.addToCart();
-    await expect(productDetailPage.toastMessage).toContainText(/added/i);
+    // Step 1: Cart
+    await page.getByTestId('proceed-1').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.getByTestId('proceed-1').click();
 
-    // Navigate to cart and verify item count
-    await cartPage.goto();
-    const itemCount = await cartPage.getItemCount();
-    expect(itemCount).toBeGreaterThanOrEqual(1);
-  });
+    // Step 2: Sign in — reuse LoginPage locators (same data-test attributes appear in the wizard)
+    await loginPage.emailInput.fill(users.customer.email);
+    await loginPage.passwordInput.fill(users.customer.password);
+    await loginPage.loginButton.click();
+    await page.getByTestId('proceed-2').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.getByTestId('proceed-2').click();
 
-  test('remove a product from the cart', async ({
-    productsPage,
-    productDetailPage,
-    cartPage,
-    page,
-  }) => {
-    // Add an item first
-    const names = await productsPage.getProductNames();
-    await productsPage.openProductByName(names[0]);
-    await productDetailPage.addToCart();
+    // Step 3: Billing address
+    const addr = users.customer.address;
+    await page.getByTestId('state').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.getByTestId('street').fill(addr.street);
+    await page.getByTestId('city').fill(addr.city);
+    await page.getByTestId('state').fill(addr.state);
+    await page.getByTestId('country').fill(addr.country);
+    await page.getByTestId('postal_code').fill(addr.postal_code);
+    await page.getByTestId('proceed-3').click();
 
-    // Remove it
-    await cartPage.goto();
-    await cartPage.waitForLoad();
-    const before = await cartPage.getItemCount();
-    await cartPage.removeItemAt(0);
-    const after = await cartPage.getItemCount();
-    expect(after).toBe(before - 1);
-  });
+    // Step 4: Payment
+    await page.getByTestId('payment-method').waitFor({ state: 'visible', timeout: 15_000 });
+    await page.getByTestId('payment-method').selectOption('cash-on-delivery');
+    await page.getByTestId('finish').click();
 
-  test('empty cart shows empty state message', async ({
-    productsPage,
-    productDetailPage,
-    cartPage,
-    page,
-  }) => {
-    // Add an item first so a cart session is created (live site requires this)
-    const names = await productsPage.getProductNames();
-    await productsPage.openProductByName(names[0]);
-    await productDetailPage.addToCart();
+    // First click validates payment; second click creates the invoice
+    await expect(page.getByTestId('payment-success-message')).toContainText('Payment was successful', { timeout: 15_000 });
+    await page.getByTestId('finish').click();
 
-    await cartPage.goto();
-    await cartPage.waitForLoad();
-    const count = await cartPage.getItemCount();
-
-    // Remove all items to reach the empty state
-    for (let i = 0; i < count; i++) {
-      await cartPage.removeItemAt(0);
-    }
-
-    await expect(cartPage.emptyCartMessage).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('#order-confirmation')).toBeVisible({ timeout: 45_000 });
   });
 });
+

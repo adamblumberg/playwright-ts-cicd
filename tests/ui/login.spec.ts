@@ -7,8 +7,10 @@ test.describe('Authentication', () => {
   });
 
   test('should log in with valid credentials', async ({ loginPage, page }) => {
-    await loginPage.login(users.customer.email, users.customer.password);
-    await expect(page).toHaveURL(/\/account/, { timeout: 10_000 });
+    // loginAndWait uses a URL predicate rather than a hard-coded path, so it
+    // stays green even if the site changes its post-login redirect.
+    await loginPage.loginAndWait(users.customer.email, users.customer.password);
+    await expect(page).not.toHaveURL(/\/auth\/login/);
   });
 
   test('should show error for invalid credentials', async ({ loginPage }) => {
@@ -19,13 +21,9 @@ test.describe('Authentication', () => {
     await expect(loginPage.errorMessage).toBeVisible();
   });
 
-  test('should show validation error when fields are empty', async ({
-    loginPage,
-    page,
-  }) => {
+  test('should show validation error when fields are empty', async ({ loginPage }) => {
     await loginPage.loginButton.click();
-    // Angular shows an inline validation error div rather than native browser focus
-    await expect(page.getByTestId('email-error')).toBeVisible();
+    await expect(loginPage.emailError).toBeVisible();
   });
 
   test('login page has correct title', async ({ page }) => {

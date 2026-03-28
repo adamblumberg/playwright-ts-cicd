@@ -13,8 +13,8 @@ A test automation framework and CI/CD pipeline I built to demonstrate end-to-end
 | Layer | Tool | Count |
 |---|---|---|
 | Unit tests | Vitest | 21 |
-| API tests | Playwright (no browser) | 44 |
-| UI tests | Playwright (Chrome, Firefox, WebKit, Mobile) | 46 |
+| API tests | Playwright (no browser) | 22 |
+| UI tests | Playwright (Chrome, Firefox, WebKit, Mobile) | 35 |
 
 The app under test is [practicesoftwaretesting.com](https://practicesoftwaretesting.com) — a realistic e-commerce site with a public REST API, which lets me show full-stack test coverage including checkout and cart flows.
 
@@ -37,7 +37,7 @@ All UI locators live in `src/pages/`. When the site changed from `data-testid` t
 Test files import from `src/fixtures/` which injects fully-constructed page objects and an `ApiClient` instance. Tests destructure only what they need:
 
 ```typescript
-test('add a product to the cart', async ({ productsPage, productDetailPage, cartPage }) => {
+test('complete checkout flow', async ({ page, apiClient, loginPage }) => {
   // no setup noise — just the test
 });
 ```
@@ -71,7 +71,6 @@ playwright-ts-cicd/
 │   │   └── index.ts              # DI-style fixture setup — page objects + API client
 │   ├── pages/                    # Page Object Models
 │   │   ├── BasePage.ts
-│   │   ├── CartPage.ts
 │   │   ├── LoginPage.ts
 │   │   ├── ProductDetailPage.ts
 │   │   └── ProductsPage.ts
@@ -82,7 +81,7 @@ playwright-ts-cicd/
 │   │   ├── auth.spec.ts          # Auth contract tests (login, token, 401/422 handling)
 │   │   └── products.spec.ts      # Product & category endpoint tests
 │   ├── ui/
-│   │   ├── cart.spec.ts          # Add / remove / empty cart flows
+│   │   ├── cart.spec.ts          # Full E2E checkout flow (add to cart → sign in → billing → payment)
 │   │   ├── login.spec.ts         # Auth UI (valid, invalid, validation errors)
 │   │   └── products.spec.ts      # Browse, search, sort, filter
 │   └── unit/
@@ -126,9 +125,9 @@ push / PR
 
 **Key decisions in the pipeline:**
 
-- **Lint and type-check gate first.** No point running 90 tests against code that doesn't compile.
+- **Lint and type-check gate first.** No point running 78 tests against code that doesn't compile.
 - **API tests and UI tests run in parallel** after the gate passes, not sequentially. On a branch with both a backend fix and a UI fix, you get both results in one run.
-- **UI tests are sharded across 3 runners.** With 46 tests across 4 browsers, sharding cuts the wall-clock time by roughly two-thirds.
+- **UI tests are sharded across 3 runners.** With 35 tests across 4 browsers, sharding cuts the wall-clock time by roughly two-thirds.
 - **`retries: 2` on CI only.** Locally, a failure is a failure. On CI, transient network hiccups shouldn't block a merge. Two retries surface genuine flakiness over time without masking it entirely.
 - **Every run deploys to GitHub Pages.** Failures don't hide in terminal scrollback — the full HTML report, with screenshots and traces for every failure, is a click away.
 
@@ -191,4 +190,4 @@ A few things I'd invest in for a production codebase:
 - **API authentication for test isolation** — using a dedicated test user per run to avoid shared cart state between parallel workers
 - **Contract testing with Pact** — to decouple UI and API test suites and catch breaking API changes before they reach the frontend
 - **Test tagging** (`@smoke`, `@regression`) with a separate smoke job on deployment to catch critical path failures within 60 seconds of a release
-- **Payment flow coverage** — the current suite stops before checkout completes. For a payments product I'd extend this to cover the full transaction, including declined cards, instalment plan selection, and order confirmation emails via a test inbox API
+- **Payment flow coverage** — the current suite covers the full E2E checkout: add to cart, sign in, billing address, payment method, and order confirmation.
