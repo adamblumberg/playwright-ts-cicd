@@ -12,7 +12,8 @@ test.describe('Shopping cart', () => {
     // Wait for the cart badge to update before navigating away, otherwise Angular hasn't
     // finished writing to localStorage and the checkout page will see an empty cart.
     await productDetailPage.addToCartButton.click();
-    await expect(page.getByTestId('cart-quantity')).not.toHaveText('0', { timeout: 10_000 });
+    // Wait for badge to explicitly show 1 — confirms Angular wrote the item to localStorage
+    await expect(page.getByTestId('cart-quantity')).toHaveText('1', { timeout: 10_000 });
 
     // Proceed through the checkout wizard
     await page.goto('/checkout', { waitUntil: 'domcontentloaded' });
