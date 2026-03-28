@@ -2,7 +2,7 @@ import { test, expect } from '../../src/fixtures';
 import { users } from '../../src/data/users';
 
 test.describe('Shopping cart', () => {
-  test('complete checkout flow', async ({ page, apiClient }) => {
+  test('complete checkout flow', async ({ page, apiClient, loginPage }) => {
     // Navigate to a product and add to cart (unauthenticated)
     const { data: products } = await apiClient.getProducts();
     await page.goto(`/product/${products[0].id}`, { waitUntil: 'domcontentloaded' });
@@ -17,10 +17,10 @@ test.describe('Shopping cart', () => {
     await page.getByTestId('proceed-1').waitFor({ state: 'visible', timeout: 15_000 });
     await page.getByTestId('proceed-1').click();
 
-    // Step 2: Sign in
-    await page.getByTestId('email').fill(users.customer.email);
-    await page.getByTestId('password').fill(users.customer.password);
-    await page.getByTestId('login-submit').click();
+    // Step 2: Sign in — reuse LoginPage locators (same data-test attributes appear in the wizard)
+    await loginPage.emailInput.fill(users.customer.email);
+    await loginPage.passwordInput.fill(users.customer.password);
+    await loginPage.loginButton.click();
     await page.getByTestId('proceed-2').waitFor({ state: 'visible', timeout: 15_000 });
     await page.getByTestId('proceed-2').click();
 
@@ -41,8 +41,6 @@ test.describe('Shopping cart', () => {
 
     // Confirm payment then finalise order
     await expect(page.getByTestId('payment-success-message')).toContainText('Payment was successful', { timeout: 15_000 });
-    // Wait for the Confirm button to be enabled before clicking
-    await page.getByTestId('finish').waitFor({ state: 'visible', timeout: 10_000 });
     await expect(page.getByTestId('finish')).toBeEnabled({ timeout: 10_000 });
     await page.getByTestId('finish').click();
 
