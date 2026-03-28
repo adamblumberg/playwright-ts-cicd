@@ -6,7 +6,6 @@ export class LoginPage extends BasePage {
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
   readonly errorMessage: Locator;
-  readonly welcomeMessage: Locator;
   readonly emailError: Locator;
 
   constructor(page: Page) {
@@ -15,7 +14,6 @@ export class LoginPage extends BasePage {
     this.passwordInput  = page.getByTestId('password');
     this.loginButton    = page.getByTestId('login-submit');
     this.errorMessage   = page.getByTestId('login-error');
-    this.welcomeMessage = page.getByTestId('page-title');
     this.emailError     = page.getByTestId('email-error');
   }
 

@@ -2,7 +2,6 @@ import { test as base, type APIRequestContext } from '@playwright/test';
 import { LoginPage } from '@pages/LoginPage';
 import { ProductsPage } from '@pages/ProductsPage';
 import { ProductDetailPage } from '@pages/ProductDetailPage';
-import { CartPage } from '@pages/CartPage';
 import { ApiClient } from '@api/ApiClient';
 
 /**
@@ -13,7 +12,6 @@ type Fixtures = {
   loginPage: LoginPage;
   productsPage: ProductsPage;
   productDetailPage: ProductDetailPage;
-  cartPage: CartPage;
   apiClient: ApiClient;
   apiRequest: APIRequestContext;
 };
@@ -29,10 +27,6 @@ export const test = base.extend<Fixtures>({
 
   productDetailPage: async ({ page }, use) => {
     await use(new ProductDetailPage(page));
-  },
-
-  cartPage: async ({ page }, use) => {
-    await use(new CartPage(page));
   },
 
   apiRequest: async ({ playwright }, use) => {
