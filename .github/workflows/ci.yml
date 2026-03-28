@@ -195,13 +195,16 @@ jobs:
           retention-days: 30
 
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: playwright-report/
 
       - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master'
         id: deployment
         uses: actions/deploy-pages@v4
 
       - name: Print report URL
+        if: github.ref == 'refs/heads/master'
         run: echo "Report → ${{ steps.deployment.outputs.page_url }}"
