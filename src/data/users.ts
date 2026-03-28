@@ -1,10 +1,10 @@
 /** Test users for practicesoftwaretesting.com */
 export const users = {
   customer: {
-    email: 'customer@practicesoftwaretesting.com',
+    email: 'customer2@practicesoftwaretesting.com',
     password: 'welcome01',
-    firstName: 'Jane',
-    lastName: 'Doe',
+    firstName: 'Jack',
+    lastName: 'Howe',
     address: {
       street: '123 Main Street',
       city: 'Amsterdam',

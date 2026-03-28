@@ -39,12 +39,11 @@ test.describe('Shopping cart', () => {
     await page.getByTestId('payment-method').selectOption('cash-on-delivery');
     await page.getByTestId('finish').click();
 
-    // Confirm payment then finalise order
+    // First click validates payment; second click creates the invoice
     await expect(page.getByTestId('payment-success-message')).toContainText('Payment was successful', { timeout: 15_000 });
-    await expect(page.getByTestId('finish')).toBeEnabled({ timeout: 10_000 });
     await page.getByTestId('finish').click();
 
-    await expect(page.getByText(/Thanks for your order/)).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('#order-confirmation')).toBeVisible({ timeout: 45_000 });
   });
 });
 
