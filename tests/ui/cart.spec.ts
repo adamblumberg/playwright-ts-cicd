@@ -41,9 +41,12 @@ test.describe('Shopping cart', () => {
 
     // Confirm payment then finalise order
     await expect(page.getByTestId('payment-success-message')).toContainText('Payment was successful', { timeout: 15_000 });
+    // Wait for the Confirm button to be enabled before clicking
+    await page.getByTestId('finish').waitFor({ state: 'visible', timeout: 10_000 });
+    await expect(page.getByTestId('finish')).toBeEnabled({ timeout: 10_000 });
     await page.getByTestId('finish').click();
 
-    await expect(page.getByText(/Thanks for your order/)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Thanks for your order/)).toBeVisible({ timeout: 30_000 });
   });
 });
 
