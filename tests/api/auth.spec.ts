@@ -36,7 +36,6 @@ test.describe('Auth API', () => {
 
   test('authenticated token works for a protected endpoint', async ({
     apiClient,
-    apiRequest,
   }) => {
     await apiClient.login(users.customer.email, users.customer.password);
     // Reuse the same apiClient which now carries the token

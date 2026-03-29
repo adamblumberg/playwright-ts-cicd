@@ -4,7 +4,7 @@ A test automation framework and CI/CD pipeline I built to demonstrate end-to-end
 
 [![CI](https://github.com/adamblumberg/playwright-ts-cicd/actions/workflows/ci.yml/badge.svg)](https://github.com/adamblumberg/playwright-ts-cicd/actions/workflows/ci.yml)
 
-**Live test report →** `https://adamblumberg.github.io/playwright-ts-cicd`
+**Live test report →** [https://adamblumberg.github.io/playwright-ts-cicd](https://adamblumberg.github.io/playwright-ts-cicd)
 
 ---
 
@@ -13,7 +13,7 @@ A test automation framework and CI/CD pipeline I built to demonstrate end-to-end
 | Layer | Tool | Count |
 |---|---|---|
 | Unit tests | Vitest | 21 |
-| API tests | Playwright (no browser) | 22 |
+| API tests | Playwright (no browser) | 11 |
 | UI tests | Playwright (Chrome, Firefox, WebKit, Mobile) | 35 |
 
 The app under test is [practicesoftwaretesting.com](https://practicesoftwaretesting.com) — a realistic e-commerce site with a public REST API, which lets me show full-stack test coverage including checkout and cart flows.
@@ -180,14 +180,4 @@ npm run report
 2. Set **Source** to **GitHub Actions**
 3. Push to `master` — the report URL will be printed at the end of the pipeline run
 
----
 
-## What I would add next
-
-A few things I'd invest in for a production codebase:
-
-- **Visual regression tests** using Playwright's snapshot API — useful for catching layout regressions in payment UI components
-- **API authentication for test isolation** — using a dedicated test user per run to avoid shared cart state between parallel workers
-- **Contract testing with Pact** — to decouple UI and API test suites and catch breaking API changes before they reach the frontend
-- **Test tagging** (`@smoke`, `@regression`) with a separate smoke job on deployment to catch critical path failures within 60 seconds of a release
-- **Payment flow coverage** — the current suite covers the full E2E checkout: add to cart, sign in, billing address, payment method, and order confirmation.
