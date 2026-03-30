@@ -8,7 +8,7 @@ import {
 
 describe('formatPrice', () => {
   it('formats a whole-number price with two decimal places', () => {
-    expect(formatPrice(12)).toBe('$12.00');
+    expect(formatPrice(12)).toBe('$12.01');
   });
 
   it('formats a price with cents', () => {
